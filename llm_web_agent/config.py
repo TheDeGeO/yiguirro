@@ -1,10 +1,8 @@
 """
 Configuration settings for the LLM Web Agent.
 """
-
 import os
 import sys
-
 
 def get_env(name, default):
     """Return an environment override, or the default when unset or blank."""
@@ -13,75 +11,87 @@ def get_env(name, default):
         return default
     return value
 
-
 def get_int_env(name, default):
     """Return a positive integer environment override, or fall back clearly."""
     value = os.getenv(name)
     if value is None or value.strip() == "":
         return default
-
     try:
         parsed = int(value)
     except ValueError:
-        print(
-            f"WARNING: {name} must be a positive integer; using default {default}.",
-            file=sys.stderr,
-        )
+        print(f"WARNING: {name} must be a positive integer; using default {default}.", file=sys.stderr)
         return default
-
     if parsed <= 0:
-        print(
-            f"WARNING: {name} must be a positive integer; using default {default}.",
-            file=sys.stderr,
-        )
+        print(f"WARNING: {name} must be a positive integer; using default {default}.", file=sys.stderr)
         return default
-
     return parsed
 
+# --- Local LM API Endpoint ---
+LOCAL_LM_URL = get_env("LOCAL_LM_URL", "http://127.0.0.1:11434/v1/chat/completions")
+LOCAL_LM_MODEL = get_env("LOCAL_LM_MODEL", "qwen2.5:1.5b-instruct")
 
-# LM Studio API Endpoint (OpenAI-compatible)
-# Ensure this matches your Local LM server (Ollama, LM Studio, Jan, etc.) configuration.
-LOCAL_LM_URL = get_env(
-    "LOCAL_LM_URL",
-    "http://127.0.0.1:1234/v1/chat/completions",
-) # Adjust port if needed (e.g., 11434 for Ollama)
+# --- SearxNG Instance ---
+SEARXNG_URL = get_env("SEARXNG_URL", "http://127.0.0.1:8888")
 
-# Specify the model name if required by your Local LM setup and the API endpoint.
-# Example: LOCAL_LM_MODEL = "llama3:instruct" # For Ollama
-# Example: LOCAL_LM_MODEL = "lmstudio-community/Meta-Llama-3-8B-Instruct-GGUF" # For LM Studio
-LOCAL_LM_MODEL = get_env("LOCAL_LM_MODEL", None) # Set to None or the actual model identifier string
-
-# Local SearxNG Instance URL
-# Make sure your SearxNG instance is running and accessible at this address.
-SEARXNG_URL = get_env("SEARXNG_URL", "http://127.0.0.1:8080")
-
-# Keywords to trigger a standard web search (lowercase)
+# --- Multilingual Fallback Keywords ---
 SEARCH_TRIGGER_KEYWORDS = [
-    "latest", "current", "today", "recent", "news",
-    "price of", "stock", "weather", "who won", "what happened",
-    "define", "explain", "summary of", "search for", "find information on",
-    "time", "momentan", "momentane"
+    # English
+    "latest", "current", "today", "recent", "news", "price of", "stock", "weather", "who won", "search for", "find info",
+    # Spanish
+    "últimas", "actual", "hoy", "reciente", "noticias", "precio de", "clima", "quién ganó", "buscar", "información",
+    # French
+    "dernières", "actuel", "aujourd'hui", "récent", "actualités", "prix de", "météo", "qui a gagné", "rechercher",
+    # Portuguese
+    "últimas", "atual", "hoje", "recente", "notícias", "preço de", "clima", "quem ganhou", "pesquisar",
+    # Italian
+    "ultime", "attuale", "oggi", "recente", "notizie", "prezzo di", "meteo", "chi ha vinto", "cercare",
+    # German
+    "neueste", "aktuell", "heute", "nachrichten", "preis von", "wetter", "wer hat gewonnen", "suchen"
 ]
 
-# Keywords to trigger an image search (lowercase)
 IMAGE_SEARCH_TRIGGER_KEYWORDS = [
-    "image of", "images of", "picture of", "pictures of", "show me image", "show me picture"
+    "image of", "images of", "picture of", "pictures of", "show me image", "show me picture",
+    "imagen de", "imágenes de", "foto de", "fotos de", "muéstrame imagen",
+    "image de", "photo de", "imagem de", "foto de", "immagine di", "foto di", "bild von", "foto von"
 ]
 
-# Parameters for SearxNG query (base parameters)
-# 'categories' will be added dynamically for image searches
 SEARXNG_PARAMS = {
     "format": "json",
-    "engines": "google,bing,duckduckgo", # Adjust engines as needed
-    "safesearch": "0", # 0=off, 1=moderate, 2=strict
-    # "language": "en",
+    "engines": "google,bing,duckduckgo",
+    "safesearch": "0",
 }
 
-# How many search results to process and include in the context (text or image URLs)
-MAX_SEARCH_RESULTS = get_int_env("MAX_SEARCH_RESULTS", 5) # Increased slightly for images
-
-# Timeout for network requests in seconds
+MAX_SEARCH_RESULTS = get_int_env("MAX_SEARCH_RESULTS", 10)
 REQUEST_TIMEOUT = get_int_env("REQUEST_TIMEOUT", 15)
 
-# Optional: System prompt to guide the LLM's behavior (for text responses)
-SYSTEM_PROMPT = "You are a helpful assistant that can use web search results to answer questions accurately."
+# --- Decision System Prompt (Improved for consistency) ---
+DECISION_SYSTEM_PROMPT = """You are a decision router. Analyze the user's message and respond ONLY with a valid JSON object. No explanations, no extra text.
+
+Available actions:
+- {"action": "search", "query": "search query"} - For current events, news, prices, weather, recent information
+- {"action": "image_search", "query": "search query"} - For finding images
+- {"action": "system_info", "query": "info needed"} - For questions about current date/time, system hardware, OS, or your own AI model/version
+- {"action": "respond", "answer": "your answer"} - For general knowledge questions you can answer directly
+
+Examples:
+User: "What is the weather today?"
+Response: {"action": "search", "query": "weather today"}
+
+User: "What date is it?"
+Response: {"action": "system_info", "query": "current date"}
+
+User: "Show me pictures of cats"
+Response: {"action": "image_search", "query": "cats"}
+
+User: "What is the capital of France?"
+Response: {"action": "respond", "answer": "The capital of France is Paris."}
+
+Respond ONLY with the JSON object:"""
+
+DECISION_TEMPERATURE = 0.1
+SYSTEM_PROMPT = """You are a helpful, precise, and critical assistant. 
+CRITICAL RULE: When using web search results, you MUST verify that the information strictly satisfies ALL constraints in the user's question. 
+If the provided search results do not contain a valid answer that meets all the user's constraints, state clearly: "The search did not yield a definitive answer that meets your specific criteria," instead of guessing or contradicting the prompt.
+Base your answer strictly on the provided context, but apply logical filtering."""
+# --- Conversation Settings ---
+MAX_HISTORY_TURNS = 10  # Limit history to prevent context overflow
