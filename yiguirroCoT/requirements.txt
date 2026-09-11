@@ -1,0 +1,4 @@
+requests
+trafilatura
+rank_bm25
+curl_cffi
