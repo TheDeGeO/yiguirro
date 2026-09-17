@@ -1,164 +1,74 @@
-# OLD README. NEEDS UPTADE
+# 🦦 Yiguirro: Deep Research Agent
 
-## LLM Web Agent with Local SearxNG
+A local, privacy-first Deep Research Agent that orchestrates a multi-step pipeline (Plan → Search → Filter → Map → Synthesize) using a local LLM (via Ollama) and a local SearXNG instance. 
 
-**A Python command-line agent that enhances a local Large Language Model (LLM) with real-time web search capabilities using a self-hosted SearxNG instance.**
+No Docker, no cloud APIs, no data leaving your machine.
 
-This project provides a tool that accepts user prompts via the command line. When keywords indicating a need for current information or images are detected, it queries a local SearxNG instance. Text results are combined with the original prompt and sent to a local LLM (like Ollama, LM Studio, etc.), while image results (URLs) are displayed directly. The setup uses a custom-configured SearxNG instance running in Podman.
+## ✨ Features
+- **Deep Research Pipeline**: Automatically breaks down complex queries, searches the web, filters noise using BM25, maps findings per sub-query, and synthesizes a comprehensive final report.
+- **Local-First**: Runs entirely on your hardware using Ollama and a self-hosted SearXNG instance.
+- **Disk Caching**: Built-in caching system to avoid redundant LLM calls and web scrapes, saving time and compute.
+- **Interactive CLI**: Clean terminal interface with helpful slash commands (`/help`, `/clear`, `/cache`, etc.).
 
-![Demo of LLM Web Agent](Demo.gif)
+## 🛠️ Prerequisites
+Before running the agent, ensure you have the following installed and **running** on your system:
+1. **Python 3.8+** (with `venv` support)
+2. **Ollama**: Running locally (e.g., `ollama serve`) with a model pulled (e.g., `qwen2.5:1.5b-instruct` or your preferred model).
+3. **SearXNG**: Running locally and accessible via HTTP (e.g., on port `8888`).
 
-## Features
+## 🚀 Quick Setup
 
--   Accepts user prompts via CLI.
--   Detects keywords indicating a need for current information or images.
--   Queries a local SearxNG instance for relevant text snippets or image URLs. **Note:** SearxNG acts as a metasearch engine and forwards these queries to external search engines (like Google, Bing, DuckDuckGo, etc., depending on configuration).
--   For text searches, combines the original prompt with search context and sends it to a local LLM (via an OpenAI-compatible API).
--   For image searches, displays the found image URLs directly.
--   Hides intermediate processing logs for a cleaner user experience.
--   Uses a custom Podman image for SearxNG to ensure correct configuration.
-
-## Project Structure
-
-```
-./
-├── Containerfile                 # Definition for custom SearxNG image
-├── setup.sh                      # Script to build and run SearxNG container
-├── README.md                     # This file
-├── llm_web_agent/                # Python agent code
-│   ├── agent.py                  # Main agent script
-│   ├── config.py                 # Configuration (URLs, keywords)
-│   └── requirements.txt          # Python dependencies
-└── searxng_config/               # SearxNG configuration for custom image
-    └── settings.yml              # Pre-configured SearxNG settings
-├── Security_Privacy_Analysis.rtf # Notes on security/privacy aspects
-```
-
-## Prerequisites
-
-1.  **Python:** Version 3.8 or higher recommended. Ensure `python` and `pip` are in your system's PATH.
-2.  **Podman:** A container engine. The `setup.sh` script will attempt to install it using common package managers (`apt`, `dnf`, `brew`, `winget`) if it's not found. If the automatic installation fails, you'll need to install it manually: [https://podman.io/docs/installation](https://podman.io/docs/installation).
-3.  **Bash Environment (for setup script):**
-    *   **Windows:** Git Bash (recommended) or Windows Subsystem for Linux (WSL).
-    *   **macOS/Linux:** Default terminal is usually sufficient.
-4.  **Local LM Server (e.g., Ollama, LM Studio, Jan):**
-    *   Install your preferred local LLM server.
-    *   Download a compatible LLM (e.g., Llama 3, Mistral, etc.) using your server's interface.
-    *   Start the server and ensure it provides an OpenAI-compatible API endpoint (often at `http://127.0.0.1:1234` or similar).
-    *   Verify the server is running and accessible at its address.
-    *   Ensure this address matches the `LOCAL_LM_URL` configured in `llm_web_agent/config.py`.
-
-### Ollama Setup (Optional)
-
-[Ollama](https://ollama.com) is a popular way to run LLMs locally with an OpenAI-compatible API.
-
-1. **Install Ollama:**
-   ```bash
-   # macOS/Linux
-   curl -fsSL https://ollama.com/install.sh | sh
-   
-   # Or download from https://ollama.com/download
+1. Clone this repository:
+   ```
+   bash
+   git clone https://github.com/TheDeGeO/yiguirro.git
+   cd yiguirro
    ```
 
-2. **Pull a model:**
-   ```bash
-   ollama pull llama3.2
+2. Run the automated setup script:
+   ```
+   chmod +x setup.sh
+   ./setup.sh
    ```
 
-3. **Start Ollama (runs in background):**
-   ```bash
-   ollama serve
+3. Start the agent:
    ```
-
-4. **Configure the agent:**
-   Set environment variables, or edit `llm_web_agent/config.py`:
-   ```bash
-   export LOCAL_LM_URL="http://127.0.0.1:11434/v1/chat/completions"
-   export LOCAL_LM_MODEL="llama3.2"
+   cd yiguirroCoT
+   venv/bin/python3 agent.py
    ```
+⚙️ Configuration
+The agent uses sensible defaults, but you can override them using environment variables. You can set these in your shell or by creating a .env file (if you add python-dotenv to requirements).
 
-   The `/v1/chat/completions` endpoint provides OpenAI API compatibility.
-
-## Setup
-
-1.  **Clone/Download:** Obtain the project files (e.g., `git clone <repository_url>`).
-2.  **Configure SearxNG (Optional but Recommended):**
-    *   Review the `searxng_config/settings.yml` file. It has been pre-configured to enable the JSON API for local access (`127.0.0.1`) and allow the `json` format.
-    *   You may wish to customize other settings (e.g., enabled search engines under `engines:`).
-    *   **Important:** Ensure the `secret_key` (around line 105) is changed from the default `"ultrasecretkey"` for security if this instance might be exposed. The current file uses a randomly generated key.
-3.  **Run SearxNG Setup Script:**
-    *   Open your Bash terminal (Git Bash, WSL, etc.).
-    *   Navigate to the project's root directory (where `setup.sh` is located).
-    *   Make the script executable (if needed): `chmod +x setup.sh`
-    *   Run the script: `./setup.sh`
-    *   This script will:
-        *   Check if Podman is installed and attempt installation if missing.
-        *   Verify the Podman service is running and attempt to start it if needed.
-        *   Build the custom `my-searxng-custom` Podman image.
-        *   Stop and remove any previous container named `searxng`.
-        *   Start a new container named `searxng` from the custom image, mapping port 8080.
-    *   Wait for the script to complete. Check the output for any errors.
-    *   The script will remind you about the Local LM server and ask if you want to start the Python agent immediately.
-
-4.  **Set up Python Environment:**
-    *   Navigate to the agent directory: `cd llm_web_agent`
-    *   (Recommended) Create and activate a virtual environment:
-        ```bash
-        python -m venv venv
-        # Windows: venv\Scripts\activate  (cmd) or venv\Scripts\Activate.ps1 (PowerShell)
-        # macOS/Linux: source venv/bin/activate
-        ```
-    *   Install dependencies: `pip install -r requirements.txt`
-
-## Configuration
-
-The agent uses local-first defaults from `llm_web_agent/config.py`, and you can
-override common settings with environment variables:
-
+	
 | Variable | Default | Description |
 | --- | --- | --- |
-| `LOCAL_LM_URL` | `http://127.0.0.1:1234/v1/chat/completions` | OpenAI-compatible local LLM chat endpoint. |
-| `LOCAL_LM_MODEL` | unset | Optional model name sent to the local LLM. |
-| `SEARXNG_URL` | `http://127.0.0.1:8080` | Local SearxNG base URL. |
-| `MAX_SEARCH_RESULTS` | `5` | Maximum text or image results to include. |
-| `REQUEST_TIMEOUT` | `15` | SearxNG request timeout in seconds. |
+| LOCAL_LM_URL | http://127.0.0.1:11434/v1/chat/completions | Your Ollama (or compatible) chat endpoint. |
+| LOCAL_LM_MODEL | qwen2.5:1.5b-instruct | The main model used for reasoning and synthesis. |
+| PLANNER_MODEL | qwen2.5:0.5b-instruct | Lightweight model for query planning (falls back to LOCAL_LM_MODEL if unavailable) |
+| SEARXNG_URL | http://127.0.0.1:8888 | The base URL of your running SearXNG instance. |
+| MAX_SEARCH_RESULTS | 10 | Max results to fetch per sub-query. |
+| CACHE_ENABLED | 1 | Set to 0 to disable disk caching. |
+	
+🧠 Architecture (yiguirroCoT/)
 
-Numeric values must be positive integers. Invalid numeric overrides fall back to
-the defaults and print a warning.
+    agent.py: Main orchestrator and CLI interface.
+    planificador.py: Breaks the user's complex prompt into targeted sub-queries.
+    buscador.py: Executes queries against SearXNG and extracts text via trafilatura.
+    filtrador.py: Uses rank_bm25 to score and extract only the most relevant paragraphs.
+    mapeador.py: Summarizes the filtered findings for each individual sub-query.
+    sintetizador.py: Combines all mapped summaries into a cohesive, cited final report.
+    cache.py: Handles persistent disk caching for LLM responses and search results.
 
-## Running the Agent
+💡 CLI Commands
+While the agent is running, you can use these slash commands:
 
-1.  **Ensure Services are Running:**
-    *   The SearxNG container should be running (started by `setup.sh`). Verify with `podman ps --filter name=searxng`.
-    *   Ensure your Local LM API server (Ollama, LM Studio, etc.) is running.
-2.  **Run the Python Script:**
-    *   Make sure your Python virtual environment is activated (if used).
-    *   Navigate to the agent directory: `cd llm_web_agent`
-    *   Run the agent: `python agent.py` (or let `setup.sh` start it).
-3.  **Interact:** Type your prompts at the `You:` prompt. Use keywords like "latest news", "image of a cat", etc., to trigger web/image searches. Type `quit` or `exit` to stop the agent.
-## Security and Privacy
+    /help : Show available commands.
+    /clear : Clear the current conversation history.
+    /info : Display dynamic system context (OS, CPU, model, time).
+    /model : Show the currently active LLM model.
+    /cache : Show disk cache statistics.
+    /cache clear [ns] : Clear the cache (optionally for a specific namespace).
+    /bye or /exit : Exit the agent.
 
-Please review the `Security_Privacy_Analysis.rtf` file for important considerations regarding the security and privacy implications of using this tool, particularly concerning how SearxNG interacts with external search engines and how prompts/results are handled.
-
-
-## Troubleshooting
-
-*   **SearxNG Container Fails to Start:** Check Podman logs (`podman logs searxng`). Look for port conflicts (8080) or `settings.yml` errors.
-*   **Agent Can't Connect to SearxNG:** Ensure the container is running (`podman ps`) and accessible at `http://127.0.0.1:8080`. Check firewalls.
-*   **Agent Can't Connect to Local LM:** Verify the LM server is running and the `LOCAL_LM_URL` in `llm_web_agent/config.py` is correct.
-*   **403 Forbidden from SearxNG:** Check `searxng_config/settings.yml` for correctness *before* running `setup.sh`. Rebuild the image (`./setup.sh` will do this) if you changed the settings file after the initial build.
-
-## Contributing
-
-Contributions are welcome, especially local-first setup fixes, tests, and safer search/LLM handling. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full checklist.
-
-Before opening a pull request, run:
-
-```bash
-python3 -m pytest -q
-python3 -m py_compile llm_web_agent/*.py
-```
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+📜 License
+MIT License. See the LICENSE file for details.
