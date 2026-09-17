@@ -144,4 +144,4 @@ cython_debug/
 # VSCode settings
 .vscode/
 
-.bs
+*.bs
