@@ -1,4 +1,4 @@
-# 🦦 Yiguirro: Deep Research Agent
+# 🐦 Yiguirro: Deep Research Agent
 
 A local, privacy-first Deep Research Agent that orchestrates a multi-step pipeline (Plan → Search → Filter → Map → Synthesize) using a local LLM (via Ollama) and a local SearXNG instance. 
 
