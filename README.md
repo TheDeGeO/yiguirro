@@ -19,20 +19,19 @@ Before running the agent, ensure you have the following installed and **running*
 ## 🚀 Quick Setup
 
 1. Clone this repository:
-   ```
-   bash
+   ```bash
    git clone https://github.com/TheDeGeO/yiguirro.git
    cd yiguirro
    ```
 
 2. Run the automated setup script:
-   ```
+   ```bash
    chmod +x setup.sh
    ./setup.sh
    ```
 
 3. Start the agent:
-   ```
+   ```bash
    cd yiguirroCoT
    venv/bin/python3 agent.py
    ```
