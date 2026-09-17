@@ -1,4 +1,6 @@
-# LLM Web Agent with Local SearxNG
+# OLD README. NEEDS UPTADE
+
+## LLM Web Agent with Local SearxNG
 
 **A Python command-line agent that enhances a local Large Language Model (LLM) with real-time web search capabilities using a self-hosted SearxNG instance.**
 
