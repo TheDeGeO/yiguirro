@@ -1,0 +1,11 @@
+Se me ocurre este procedimeinto:
+1. Depurador: Limpiar y simplificar el prompt original, dejandolo listo para el arquitecto (lfm2.5-1.2b-instruct demuestra funcionar bien para esto)
+2. Arquitecto: Separar prompt en querys puntuales y formatearlas en JSON (mismo modelo que Depurador)
+3. Buscador: En lugar de usar una IA, usar python para hacer las busquedas necesarias, talvez abrir una 10 paginas para cada pregunta, el numero sera configurable por el usuario.
+4. Pre-Sintetizador: Generar un resumen de la informacion recolectada para cada pregunta puntual (Podria ser el mismo modelo, o se puede considerar ajustarlo a uno mas potente si 10 paginas es demasiado contexto)
+5. Sintetizador: Recibir la pregunta principal generada por el depurador y todos los resultados de los pre-sintetizadores y generar la respuesta final (Misma consideracion que el anterior)
+
+
+separa esta prompt en de 3 a 10 preguntas puntuales con contexto y devuelvelas en JSON de esta manera: {"queries": ["query 1", "query 2", ...]
+
+quiero hacer una investigacion amplia sobre los proyectos de data center en costa rica. he oido que quiere hacer uno en limon, uno en bagaces y uno en guanacaste. quantum consumiria 200mw y otro de 120mw. Necesito saber todos los detalles de estos proyectos, donde se construyen, cuanta energia consumen, cuanta agua consumen, saber si la oferta de empleo realmente es tan baja (100 empleos con el data center quantum), saber a cuales y por que se les dara el regimen de zona franca. Las condiciones de los sistemas electricos e hidricos en las zonas de estos proyectos, asi como de la flora y la fauna y de pueblos cercanos que se puedan ver afectados. Quiero saber como se estan manejando los permisos de estos proyectos y como piensa sacar agua de zonas tan vulnerables como guanacaste, o de donde piensan sacar +320mw de nuestra red electrica cuando la hidroelectrica del reventazon produce 300mw. Quiero saber quienes son las empresas, insituciones y politicos involucrados con estos proyectos y cuales son sus historiales
